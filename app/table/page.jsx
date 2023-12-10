@@ -7,6 +7,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/DeleteOutlined";
 import SaveIcon from "@mui/icons-material/Save";
 import CancelIcon from "@mui/icons-material/Close";
+import {TextField} from "@mui/material";
 import {
   GridRowModes,
   DataGrid,
@@ -23,19 +24,14 @@ import {
 import { CircularProgress, Typography } from "@mui/material";
 
 function EditToolbar(props) {
-  const { rows, setRows, setRowModesModel } = props;
+  const { setRows, setRowModesModel } = props;
 
   const handleClick = () => {
-    const id = rows.length;
-    setRows((oldRows) => {
-      return [
-        ...oldRows,
-        { id: id, Bill_ID: "", Dish_ID: "", Amount: 0, isNew: true },
-      ];
-    });
+    let newId = 0
+    setRows((oldRows) => {newId = oldRows.length+1; return [...oldRows, { Table_ID: newId, number_of_chairs: 0, Status: "Sẵn sàng", Max_People: 0, Min_people: 0, Area_name: "", isNew: true }]});
     setRowModesModel((oldModel) => ({
       ...oldModel,
-      [id]: { mode: GridRowModes.Edit, fieldToFocus: "Bill_ID" },
+      [newId]: { mode: GridRowModes.Edit, fieldToFocus: "number_of_chairs" },
     }));
   };
 
@@ -48,48 +44,46 @@ function EditToolbar(props) {
   );
 }
 
-const addNewBillDish = async (row) => {
+const addNewStaff = async (row) => {
   try {
-    console.log(row);
-    const res = await fetch(`api/bill-dish`, {
-      method: "POST",
+    const res = await fetch(`api/staffs`, {
+      method: 'POST',
       body: JSON.stringify({
-        bill_ID: row.Bill_ID,
-        dish_ID: row.Dish_ID,
-        amount: row.Amount
-      }),
-    });
+        Staff_name: row.Staff_name, 
+        Staff_address: row.Staff_address, 
+        Sphone: row.Sphone, 
+        Sex: row.Sex, 
+        Area_name: row.Area_name
+      })
+    })
   } catch (error) {
     console.log(error);
   }
-};
+}
 
-const deleteBillDish = async (bill_ID, dish_ID) => {
+const deleteStaff = async (id) => {
   try {
-    const res = await fetch(`api/bill-dish`, {
-      method: "DELETE",
+    const res = await fetch(`api/staffs`, {
+      method: 'DELETE',
       body: JSON.stringify({
-        bill_ID: bill_ID,
-        dish_ID: dish_ID
-      }),
-    });
+        Staff_ID: id,
+      })
+    })
   } catch (error) {
     console.log(error);
   }
-};
+}
 
-export default function BillDishPage() {
+export default function TablePage() {
   const [rows, setRows] = React.useState([]);
   const [rowModesModel, setRowModesModel] = React.useState({});
   const [loading, setLoading] = React.useState(true);
+  const [findValue, setFindValue] = React.useState("");
 
   React.useEffect(() => {
     const fetchStaffs = async () => {
-      const res = await fetch(`api/bill-dish`);
-      let data = await res.json();
-      data = data.map((row, index) => {
-        return { ...row, id: index };
-      });
+      const res = await fetch(`api/table`);
+      const data = await res.json();
 
       setRows(data);
       setLoading(false);
@@ -113,9 +107,7 @@ export default function BillDishPage() {
   };
 
   const handleDeleteClick = (id) => () => {
-    const bill_ID = rows[id].Bill_ID
-    const dish_ID = rows[id].Dish_ID
-    deleteBillDish(bill_ID, dish_ID);
+    deleteStaff(id);
     setRows(rows.filter((row) => row.id !== id));
   };
 
@@ -132,9 +124,11 @@ export default function BillDishPage() {
   };
 
   const processRowUpdate = (newRow) => {
-    addNewBillDish(newRow);
+    if (rows.length===newRow.Table_ID) {
+      addNewStaff(newRow);
+    }
     const updatedRow = { ...newRow, isNew: false };
-    setRows(rows.map((row) => (row.id === newRow.id ? updatedRow : row)));
+    setRows(rows.map((row) => (row.Table_ID === newRow.Table_ID ? updatedRow : row)));
     return updatedRow;
   };
 
@@ -144,26 +138,48 @@ export default function BillDishPage() {
 
   const columns = [
     {
-      field: "Bill_ID",
-      headerName: "Bill ID",
+      field: "Table_ID",
+      headerName: "ID",
       type: "string",
       width: 80,
       align: "left",
       headerAlign: "left",
       editable: true,
     },
+    { field: "Number_of_chairs", headerName: "Chairs", align: "left", headerAlign: "left", type: "number", width: 80, editable: true },
     {
-      field: "Dish_ID",
-      headerName: "Dish ID",
-      type: "string",
-      width: 80,
+      field: "Status",
+      headerName: "Status",
+      type: "singleSelect",
+      width: 200,
+      align: "left",
+      valueOptions: ["Sẵn sàng", "Không sẵn sàng"],
+      headerAlign: "left",
       editable: true,
     },
     {
-      field: "Amount",
-      headerName: "Amount",
+      field: "Max_People",
+      headerName: "Max people",
       type: "number",
       width: 100,
+      align: "left",
+      headerAlign: "left",
+      editable: true,
+    },
+    {
+      field: "Min_people",
+      headerName: "Min people",
+      type: "number",
+      width: 80,
+      align: "left",
+      headerAlign: "left",
+      editable: true,
+    },
+    {
+      field: "Area_name",
+      headerName: "Area",
+      type: "string",
+      width: 200,
       align: "left",
       headerAlign: "left",
       editable: true,
@@ -174,9 +190,8 @@ export default function BillDishPage() {
       headerName: "Actions",
       width: 100,
       cellClassName: "actions",
-      getActions: ({ row }) => {
-        const isInEditMode =
-          rowModesModel[row.id]?.mode === GridRowModes.Edit;
+      getActions: ({row}) => {
+        const isInEditMode = rowModesModel[row.Table_ID]?.mode === GridRowModes.Edit;
 
         if (isInEditMode) {
           return [
@@ -186,13 +201,13 @@ export default function BillDishPage() {
               sx={{
                 color: "primary.main",
               }}
-              onClick={handleSaveClick(row.id)}
+              onClick={handleSaveClick(row.Table_ID)}
             />,
             <GridActionsCellItem
               icon={<CancelIcon />}
               label="Cancel"
               className="textPrimary"
-              onClick={handleCancelClick(row.id)}
+              onClick={handleCancelClick(row.Table_ID)}
               color="inherit"
             />,
           ];
@@ -203,13 +218,13 @@ export default function BillDishPage() {
             icon={<EditIcon />}
             label="Edit"
             className="textPrimary"
-            onClick={handleEditClick(row.id)}
+            onClick={handleEditClick(row.Table_ID)}
             color="inherit"
           />,
           <GridActionsCellItem
             icon={<DeleteIcon />}
             label="Delete"
-            onClick={handleDeleteClick(row.id)}
+            onClick={handleDeleteClick(row.Table_ID)}
             color="inherit"
           />,
         ];
@@ -231,9 +246,9 @@ export default function BillDishPage() {
         },
       }}
     >
-      <Typography variant="h5" color="text.primary" align="left" my={2}>
-        Quản lí món ăn phục vụ
-      </Typography>
+        <Typography variant="h5" color="text.primary" align="left" my={2}>Quản lí bàn</Typography>
+        <Typography className="ml-3" variant="h8" color="text.primary" align="left" my={2}>Kiểm tra bàn trống</Typography>
+        <TextField value={findValue} onChange={(e) => {setFindValue(e.target.value); console.log(findValue)}} id="outlined-basic" label="ID" variant="outlined" size="small"/>
       {loading ? (
         <CircularProgress />
       ) : (
@@ -249,9 +264,9 @@ export default function BillDishPage() {
             toolbar: EditToolbar,
           }}
           slotProps={{
-            toolbar: { rows, setRows, setRowModesModel },
+            toolbar: { setRows, setRowModesModel },
           }}
-          getRowId={(row) => row.id}
+          getRowId={(row) => row.Table_ID}
         />
       )}
     </Box>

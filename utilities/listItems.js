@@ -43,7 +43,7 @@ export const mainListItems = (
       </ListItemIcon>
       <ListItemText primary="Nhân viên" />
     </ListItemButton>
-    <ListItemButton href='/tables'>
+    <ListItemButton href='/table'>
       <ListItemIcon>
         <LayersIcon />
       </ListItemIcon>
