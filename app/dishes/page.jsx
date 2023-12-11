@@ -282,6 +282,7 @@ export default function DishesPage() {
                 handleRowEditStop={handleRowEditStop}
                 processRowUpdate={processRowUpdate}
                 idField="ID"
+                // EditToolbar={EditToolbar}
               />
             )}
           </TabPanel>
