@@ -23,7 +23,7 @@ import {
 import { CircularProgress, Typography } from "@mui/material";
 
 function EditToolbar(props) {
-  const { setRows, setRowModesModel } = props;
+  const { setRows, numberIDs, setNumberIDs, setRowModesModel } = props;
 
   const handleClick = () => {
     let newId = 0
@@ -73,13 +73,26 @@ const deleteStaff = async (id) => {
   }
 }
 
+const updateStaff = async (row) => {
+  try {
+    const res = await fetch(`api/staffs`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        Staff_ID: row.Staff_ID,
+        Staff_address: row.Staff_address, 
+        Sphone: row.Sphone, 
+        Staff_name: row.Staff_name, 
+        Area_name: row.Area_name
+      })
+    }).then((response) => console.log(response))
+  } catch (error) {
+    console.log(error);
+  }
+}
+
 export default function StaffPage() {
-  const [rows, setRows] = React.useState([
-    {
-      Staff_ID: "",
-      Staff_name: "",
-    },
-  ]);
+  const [rows, setRows] = React.useState([]);
+  const [numberIDs, setNumberIDs] = React.useState(0);
   const [rowModesModel, setRowModesModel] = React.useState({});
   const [loading, setLoading] = React.useState(true);
 
@@ -89,6 +102,8 @@ export default function StaffPage() {
       const data = await res.json();
 
       setRows(data);
+      console.log(data.length);
+      setNumberIDs(data.length);
       setLoading(false);
     };
 
@@ -110,8 +125,8 @@ export default function StaffPage() {
   };
 
   const handleDeleteClick = (id) => () => {
+    setRows(rows.filter((row) => row.Staff_ID !== id));
     deleteStaff(id);
-    setRows(rows.filter((row) => row.id !== id));
   };
 
   const handleCancelClick = (id) => () => {
@@ -127,8 +142,12 @@ export default function StaffPage() {
   };
 
   const processRowUpdate = (newRow) => {
-    if (rows.length===newRow.Staff_ID) {
+    if (numberIDs + 1 == Number(newRow.Staff_ID)) {
       addNewStaff(newRow);
+      setNumberIDs(numberIDs => numberIDs + 1);
+    }
+    else {
+      updateStaff(newRow);
     }
     const updatedRow = { ...newRow, isNew: false };
     setRows(rows.map((row) => (row.Staff_ID === newRow.Staff_ID ? updatedRow : row)));
@@ -265,7 +284,7 @@ export default function StaffPage() {
             toolbar: EditToolbar,
           }}
           slotProps={{
-            toolbar: { setRows, setRowModesModel },
+            toolbar: { setRows, numberIDs, setNumberIDs, setRowModesModel },
           }}
           getRowId={(row) => row.Staff_ID}
         />

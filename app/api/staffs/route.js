@@ -36,3 +36,17 @@ export const DELETE = async (req) => {
         return new Response(JSON.stringify({error: error}), {status: 500})
     }
 }
+
+export const PUT = async (req) => {
+    try {
+        const {Staff_ID, Staff_address, Sphone, Staff_name, Area_name} = await req.json();
+        const Staff_IDInt = Number(Staff_ID);
+        await excuteQuery({
+            query: "CALL sp_UpdateStaff(?, ?, ?, ?, ?)",
+            values: [Staff_IDInt, Staff_address, Sphone, Staff_name, Area_name]
+        });               
+        return new Response(JSON.stringify({"msg": "Success"}), {status: 200})
+    } catch (error) {
+        return new Response(JSON.stringify({error: error}), {status: 500})
+    }
+}

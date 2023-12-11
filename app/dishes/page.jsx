@@ -65,8 +65,12 @@ export default function DishesPage() {
       const data = await res.json();
       setRows(data);
       setLoading(false);
-      const discount = await fetch(`api/dishes/discount`);
+      const discount = await fetch(`api/dishes/discount/2023-09-01`);
       const discountData = await discount.json();
+      discountData.map((item, index) => {
+        item.ID = index + 1
+      })
+      console.log(discountData);
       setDiscountDish(discountData);
     };
 
@@ -204,12 +208,12 @@ export default function DishesPage() {
       field: "Dish",
       headerName: "Name",
       type: "string",
-      width: 200,
+      width: 400,
       align: "left",
       headerAlign: "left",
       editable: true,
     },
-    { field: "Origin_price", headerName: "Price", type: "number", width: 80, editable: true },
+    { field: "Origin_price", headerName: "Price", type: "number", width: 300, editable: true },
     {
       field: "Discount_price",
       headerName: "Price after discount",
@@ -218,52 +222,6 @@ export default function DishesPage() {
       align: "left",
       headerAlign: "left",
       editable: true,
-    },
-    {
-      field: "actions",
-      type: "actions",
-      headerName: "Actions",
-      width: 100,
-      cellClassName: "actions",
-      getActions: ({ id }) => {
-        const isInEditMode = rowModesModel[id]?.mode === GridRowModes.Edit;
-
-        if (isInEditMode) {
-          return [
-            <GridActionsCellItem
-              icon={<SaveIcon />}
-              label="Save"
-              sx={{
-                color: "primary.main",
-              }}
-              onClick={handleSaveClick(id)}
-            />,
-            <GridActionsCellItem
-              icon={<CancelIcon />}
-              label="Cancel"
-              className="textPrimary"
-              onClick={handleCancelClick(id)}
-              color="inherit"
-            />,
-          ];
-        }
-
-        return [
-          <GridActionsCellItem
-            icon={<EditIcon />}
-            label="Edit"
-            className="textPrimary"
-            onClick={handleEditClick(id)}
-            color="inherit"
-          />,
-          <GridActionsCellItem
-            icon={<DeleteIcon />}
-            label="Delete"
-            onClick={handleDeleteClick(id)}
-            color="inherit"
-          />,
-        ];
-      },
     },
   ];
 
@@ -296,7 +254,7 @@ export default function DishesPage() {
             {loading ? (
               <CircularProgress />
             ) : (
-              <Table 
+              <Table
                 rows={rows}
                 setRows={setRows}
                 columns={columns}
@@ -310,10 +268,24 @@ export default function DishesPage() {
               />
             )}
           </TabPanel>
-          <TabPanel value="2">{
-
-          }</TabPanel>
-          <TabPanel value="3">Item Three</TabPanel>
+          <TabPanel value="2">
+            {loading ? (
+              <CircularProgress />
+            ) : (
+              <Table
+                rows={discountDish}
+                setRows={setDiscountDish}
+                columns={discountColumns}
+                rowModesModel={rowModesModel}
+                setRowModesModel={setRowModesModel}
+                handleRowModesModelChange={handleRowModesModelChange}
+                handleRowEditStop={handleRowEditStop}
+                processRowUpdate={processRowUpdate}
+                idField="ID"
+                // EditToolbar={EditToolbar}
+              />
+            )}
+          </TabPanel>
         </TabContext>
       </Box>
     </Box>
