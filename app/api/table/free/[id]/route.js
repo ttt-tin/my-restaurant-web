@@ -1,10 +1,10 @@
-import excuteQuery from "../lib/connectDb";
+import excuteQuery from "@app/api/lib/connectDb"
 
 export const GET = async (req, { params }) => {
   try {
     const id = params.id
     const result = await excuteQuery({
-      query: "CALL check_status(?)",
+      query: "SELECT check_status(?) as result",
       values: [id]
     });
     return new Response(JSON.stringify(result), { status: 200 });

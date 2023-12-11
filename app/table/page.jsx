@@ -79,6 +79,7 @@ export default function TablePage() {
   const [rowModesModel, setRowModesModel] = React.useState({});
   const [loading, setLoading] = React.useState(true);
   const [findValue, setFindValue] = React.useState("");
+  const [isAvailable, setIsAvailabe] = React.useState(-1)
 
   React.useEffect(() => {
     const fetchStaffs = async () => {
@@ -91,6 +92,18 @@ export default function TablePage() {
 
     fetchStaffs();
   }, []);
+
+  const handleKeyDown = async () => {
+    try {
+      const res = await fetch(`api/table/free/${findValue}`);
+      const data = await res.json();
+      if (data[0][`result`]===1) setIsAvailabe(1)
+      else setIsAvailabe(0)
+
+    } catch (error) {
+      console.log(error);
+    }
+  }
 
   const handleRowEditStop = (params, event) => {
     if (params.reason === GridRowEditStopReasons.rowFocusOut) {
@@ -248,7 +261,8 @@ export default function TablePage() {
     >
         <Typography variant="h5" color="text.primary" align="left" my={2}>Quản lí bàn</Typography>
         <Typography className="ml-3" variant="h8" color="text.primary" align="left" my={2}>Kiểm tra bàn trống</Typography>
-        <TextField value={findValue} onChange={(e) => {setFindValue(e.target.value); console.log(findValue)}} id="outlined-basic" label="ID" variant="outlined" size="small"/>
+        <TextField onKeyDown={(e) => {if (e.key === 'Enter') {e.preventDefault(); handleKeyDown()} else {}}} onChange={(e) => {setFindValue(e.target.value)}} id="outlined-basic" label="ID" variant="outlined" size="small"/>
+        {(isAvailable===-1) ? (<></>) : ((isAvailable===1) ? (<p className="my-2 text-green-400">Sẵn sàng</p>) : (<p className="my-2 text-red-400">Không sẵn sàng</p>))}
       {loading ? (
         <CircularProgress />
       ) : (
